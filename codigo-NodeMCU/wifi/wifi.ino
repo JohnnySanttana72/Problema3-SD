@@ -23,6 +23,8 @@ extern "C" {
   #include "user_interface.h"
 }
 
+void callback(char* topic, byte* payload, unsigned int length); 
+
 const char* ssid; //variável para a rede Wifi
 const char* password; //variável para a senha da rede Wifi
 const char* endpoint_aws = "a3b300y0i6kc5u-ats.iot.us-east-1.amazonaws.com"; // AWS Endpoint
@@ -56,7 +58,7 @@ int status_LED = LOW; // variável que é usada para alterar o valor da LED para
 int status_aux_LED = LOW; // variável auxiliar que é usada para alterar o valor da LED em hora marcada
 
 os_timer_t timer; // cria o temporizador
-//bool tickTimer;
+bool responder = false;
 
 //Função que recebe os dados da publicação
 void callback(char* topic, byte* payload, unsigned int length) 
@@ -70,7 +72,7 @@ void callback(char* topic, byte* payload, unsigned int length)
   Serial.print(topic);
   Serial.print("] ");
   
-  String msg = docs["state"]["desired"]["status_LED"]; // variável que recebe o Json decodificado do status da LED para o acionamento remoto
+  String msg = docs["state"]["desired"]["estado"]; // variável que recebe o Json decodificado do status da LED para o acionamento remoto
   /*String led_status = docs["state"]["desired"]["time"][0]["status_LED"]; // variável que recebe o Json decodificado do status da LED para o agendamento
   hora = docs["state"]["desired"]["time"][0]["hour"]; // variável que recebe o Json decodificado da hora para o agendamento
   minuto = docs["state"]["desired"]["time"][0]["minute"]; // variável que recebe o Json decodificado do minuto para o agendamento
@@ -82,6 +84,8 @@ void callback(char* topic, byte* payload, unsigned int length)
     delay(1000);                       // wait for a second
     digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
     delay(1000);
+
+    responder = true;
   }
   // Condição para o acionamento remoto
   /*if (msg != NULL){
@@ -349,8 +353,22 @@ void loop() {
     reconnect(); // tenta reconectar
   }
   client_pubsub.loop(); //chama novamente a função loop 
+
+  if(responder) {
+    responder = false;
+    /*if(status_LED == LOW)
+    {*/
+    doc["state"]["reported"]["estado"] = "CONECTADO";
+    /*}else {
+      doc["state"]["reported"]["status_LED"] = "DESLIGADO"; 
+    }*/
+    serializeJson(doc, msg); // serializa a mensagem Json
   
-  long now = millis();
+    // publicar mensagens no tópico "$aws/things/NodeMCU/shadow/update"
+    client_pubsub.publish("$aws/things/NodeMCU/shadow/update", msg);
+  }
+  
+  /*long now = millis();
   if (now-lastMsg > 5000) // se o tempo da mensagem atual menos o tempo da ultima mensagem ultrapassar os 5 segundos
   {
     lastMsg = now;// recupera o tempo atual em milissegundos
@@ -362,17 +380,6 @@ void loop() {
     String horas = (String)hour+":"+(String)minute;// formata o horário atual
     Serial.print("Horas: ");
     Serial.println(horas);
-
-    // condição que verifica se o horário atual é igual ao horário agendado
-    /*if(hour == hora && minute == minuto) {
-      
-      status_LED = status_aux_LED;
-      digitalWrite(2, status_LED);
-      if(status_LED == LOW) {
-        initTimer(); 
-      }
-      
-    }*/
     
     doc.clear(); // apaga o doc do json
 
@@ -389,5 +396,5 @@ void loop() {
   
     // publicar mensagens no tópico "$aws/things/NodeMCU/shadow/update"
     client_pubsub.publish("$aws/things/NodeMCU/shadow/update", msg);
-  }
+  }*/
 }  
