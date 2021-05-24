@@ -27,19 +27,16 @@ void callback(char* topic, byte* payload, unsigned int length);
 
 const char* ssid; //variável para a rede Wifi
 const char* password; //variável para a senha da rede Wifi
-const char* endpoint_aws = "a3b300y0i6kc5u-ats.iot.us-east-1.amazonaws.com"; // AWS Endpoint
+const char* endpoint_aws = "a246rkc4q9sy4z-ats.iot.us-east-1.amazonaws.com"; // AWS Endpoint
 
 long lastMsg = 0; // variável que armazena o tempo em milisegundos da última mensagem
 char msg[256];  //buffer para conter a mensagem a ser publicada
 DynamicJsonDocument doc(1024); // cria um documento do formato json
 int timeZone = -3; // configuração do fuso horário de brasília
-int tick = 0; // variável do cronômetro do tempo de consumo em segundos
-int tack = 0; // variável que acumula o tempo de tick
+
 //int timerValue = 1;
 int hour; // variável que armazena a hora recuperada do servidor NTP
 int minute; // variável que armazena o minuto recuperado do servidor NTP
-int hora; // variável que armazena a hora enviada via MQTT
-int minuto; // variável que armazena o minuto enviado via MQTT
 
 //Socket UDP que a biblioteca utiliza para recuperar dados sobre o horário
 WiFiUDP ntpUDP;
@@ -57,8 +54,9 @@ WiFiClientSecure espClient;
 int status_LED = LOW; // variável que é usada para alterar o valor da LED para acender/apagar
 int status_aux_LED = LOW; // variável auxiliar que é usada para alterar o valor da LED em hora marcada
 
-os_timer_t timer; // cria o temporizador
 bool responder = false;
+bool responder2 = false;
+int a = 1000;
 
 //Função que recebe os dados da publicação
 void callback(char* topic, byte* payload, unsigned int length) 
@@ -73,70 +71,20 @@ void callback(char* topic, byte* payload, unsigned int length)
   Serial.print("] ");
   
   String msg = docs["state"]["desired"]["estado"]; // variável que recebe o Json decodificado do status da LED para o acionamento remoto
-  /*String led_status = docs["state"]["desired"]["time"][0]["status_LED"]; // variável que recebe o Json decodificado do status da LED para o agendamento
-  hora = docs["state"]["desired"]["time"][0]["hour"]; // variável que recebe o Json decodificado da hora para o agendamento
-  minuto = docs["state"]["desired"]["time"][0]["minute"]; // variável que recebe o Json decodificado do minuto para o agendamento
-  String timer_status_LED = docs["state"]["desired"]["timer"]["status_LED"];// variável que recebe o Json decodificado do status da LED para o temporizador
-*/
+
 
   if (msg != NULL){
-    digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
-    delay(1000);                       // wait for a second
-    digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
-    delay(1000);
-
+    if (msg.equals("um")){
+      a = 1000;
+    } else if (msg.equals("tres")){
+      a = 2000;
+    } else if (msg.equals("cinco")){
+      a = 5000;
+    }
     responder = true;
+    responder2 = true;
   }
-  // Condição para o acionamento remoto
-  /*if (msg != NULL){
-    
-    if (msg.equals("L")){
-      status_LED = LOW;  
-      digitalWrite(2, status_LED); 
-      initTimer();  
-    } else if (msg.equals("D")){
-      status_LED = HIGH;  
-      digitalWrite(2, status_LED);  
-    }
-  }*/ 
-
-  // Condição para o acionamento via temorizador
-  /*if (timer_status_LED != NULL){
-   
-    if (timer_status_LED.equals("L")){
-      status_LED = LOW; // atribui status da LED para ligado
-      digitalWrite(2, status_LED); // comando que modifica o estado da LED
-      initTimer(); // dispara o temporizador
-    } else if (timer_status_LED.equals("D")){
-      status_LED = HIGH; // atribui status da LED para desligado 
-      digitalWrite(2, status_LED); // comando que modifica o estado da LED
-    }
-  }
-
-  // Condição para o acionamento via Agendamento
-  if(led_status != NULL) {
-    Serial.println(led_status);
-    
-    if (led_status.equals("L")){
-      status_aux_LED = LOW; // atribui status auxiliar da LED para ligado
-    } else if (led_status.equals("D")){
-      status_aux_LED = HIGH; //atribui status auxiliar da LED para desligado  
-    }
-
-    File file2 = SPIFFS.open("/agenda.txt","w+"); // cria o arquivo para armazenar a hora, minuto e status da LED
-     
-     if(!file2){
-        Serial.println("Erro ao abrir arquivo!");
-     } else {
-        file2.println(status_aux_LED); //escreve em arquivo o status da LED
-        file2.println(hora); //escreve em arquivo a hora marcada
-        file2.println(minuto); //escreve em arquivo o minuto marcado
-        Serial.println("gravou agenda");
-     }
-     file2.close();
-  }*/  
 }
-
 //Conectando a um número de porta MQTT 8883 conforme padrão
 PubSubClient client_pubsub(endpoint_aws, 8883, callback, espClient); 
 
@@ -214,35 +162,6 @@ void config_certify()
   espClient.setCACert(binaryCA, len);
 }
 
-// função executada pelo temporizador
-void timerCallback(void *timing){
-  tick++;
-  Serial.println(tick);
-  
-  if(status_LED == HIGH){
-     tack += tick;
-       
-     doc.clear();
-     doc["state"]["reported"]["tempo_consumo"] = tack;// atribui o valor do tempo em segundos ao documento Json
-     serializeJson(doc, msg);
-     Serial.print("Publish message: ");
-     Serial.println(msg);
-  
-     // publicar mensagens no tópico "outTopic"
-     client_pubsub.publish("$aws/things/NodeMCU/shadow/update", msg); // publica o tempo em segundos de consumo da LED
-     tick = 0;
-     os_timer_disarm(&timer);//interrompe o temporizador
-  }
-
-  
-}
-
-// função que inicia o temporizador
-void initTimer() {
-  os_timer_setfn(&timer,timerCallback , NULL);
-  os_timer_arm(&timer, 1000, true);
-}
-
 // função que inicializa as configurações para a conexão da rede Wifi, conexão MQTT
 void setup()
 {
@@ -256,7 +175,7 @@ void setup()
   
   pinMode(LED_BUILTIN, OUTPUT); // define o pino da LED como pino de saída              
   //digitalWrite(2, LOW); // atribui o status da LED como ligado
-  initTimer(); // dispara o cronômetro
+
   
   WiFi.begin(ssid, password); //Passa os parâmetros para a função que vai fazer a conexão com a rede sem fio
   delay(1000); // Intervalo de 1000 milisegundos
@@ -284,37 +203,6 @@ void setup()
 // função para reconectar ao broker MQTT
 void reconnect() 
 {
-  int count_agenda = 0;// variável para contar a quantidade de linhas do arquivo
-  // Ler arquivo da agenda
-  File agenda = SPIFFS.open("/agenda.txt","r"); // abre o arquivo para leitura dos valores referentes a hora, minuto e status da LED
-  
-  if (!agenda) {
-    Serial.println("Erro ao abrir arquivo com o agendamento!");
-  }
-
-  String status_arquivo; //variável que recupera o status da LED
-  String hora_arquivo; //variável que recupera a hora agendada
-  String minuto_arquivo; //variável que recupera o minuto agendado
-  
-  while (agenda.available()) {
-    if (count_agenda == 0)
-       status_arquivo = agenda.readStringUntil('\n'); //na primeira linha está o status da LED
-    else if (count_agenda == 1)
-       hora_arquivo = agenda.readStringUntil('\n'); //na segunda linha está a hora
-    else
-       minuto_arquivo = agenda.readStringUntil('\n'); //na terceira linha está o minuto
-    count_agenda++;
-  }
-  agenda.close(); // fecha arquivo
-
-  status_arquivo.trim(); //remove \n do final da string lida do arquivo
-  hora_arquivo.trim();//remove \n do final da string lida do arquivo
-  minuto_arquivo.trim();//remove \n do final da string lida do arquivo
-  
-  status_aux_LED = status_arquivo.toInt(); //conversão de string para inteiro
-  hora = hora_arquivo.toInt(); //conversão de string para inteiro
-  minuto = minuto_arquivo.toInt(); //conversão de string para inteiro
-  
   // Loop até estarmos reconectados
   while (!client_pubsub.connected()) // Enquanto falhar a conexão
   {
@@ -346,7 +234,12 @@ void reconnect()
 }
 
 void loop() {
-  
+  if(responder2){
+    digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+    delay(a);                       // wait for a second
+    digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+    delay(a);
+  }
   if (!client_pubsub.connected()) // Se não houver a conexão
   {
     digitalWrite(status_LED, LOW);
@@ -355,6 +248,12 @@ void loop() {
   client_pubsub.loop(); //chama novamente a função loop 
 
   if(responder) {
+
+    digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+    delay(1000);                       // wait for a second
+    digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+    delay(1000);
+  
     responder = false;
     /*if(status_LED == LOW)
     {*/
