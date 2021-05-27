@@ -53,6 +53,10 @@
           <ul class="tm-nav-links">
             <li class="tm-nav-item active">
               <a href="#" data-linkid="0" data-align="right" class="tm-nav-link">Home</a>
+              
+              <li class="tm-nav-item">
+                <a href="#" data-linkid="1" data-align="left" class="tm-nav-link">Configuração</a>
+              </li>
             
             <li class="tm-nav-item">
               <a href="#" data-linkid="3" data-align="left" class="tm-nav-link">Contato</a>
@@ -91,9 +95,29 @@
               </section>
 
               
+ 
+               <!-- Section 1 About Me -->
+  <section class="tm-section tm-section-1">
+    <div class="tm-textbox tm-textbox-2 tm-bg-dark">
+      <h2 class="tm-text-blue mb-1">Configuração de notificação</h2>
+      <p class="mb-4">
+       Escolha o periodo que deseja não receber notificação.
+      </p>
+      <p class="mb-1"></p>
+        
+      <label for="appt"></label>
 
-            
-              
+<input type="time" id="appt" name="appt"
+       min="09:00" max="18:00" required>
+      <a
+        href="#"
+        id="tm_work_link"
+        data-linkid="1"
+        class="tm-link m-0"
+        >Salvar</a
+      >
+    </div>
+  </section>
 
               <!-- Section 3 Contact -->
               <section class="tm-section tm-section-3 tm-section-left">
@@ -201,7 +225,7 @@
         bgCycle = $("body").backgroundCycle({
           imageUrls: [
             "img/pexels-javier-aguilera-2611684.jpg",
-            "img/photo-03.jpg",
+            "img/photo-02.jpg",
             "img/photo-04.jpg",
             "img/photo-05.jpg"
           ],
