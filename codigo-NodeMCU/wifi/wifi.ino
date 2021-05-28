@@ -25,9 +25,9 @@ extern "C" {
 
 void callback(char* topic, byte* payload, unsigned int length); 
 
-const char* ssid; //variável para a rede Wifi
-const char* password; //variável para a senha da rede Wifi
-const char* endpoint_aws = "a246rkc4q9sy4z-ats.iot.us-east-1.amazonaws.com"; // AWS Endpoint
+const char* ssid = "MERCUSYS_09E2"; //variável para a rede Wifi
+const char* password = "GJDK669JSF62"; //variável para a senha da rede Wifi
+const char* endpoint_aws = "a3b300y0i6kc5u-ats.iot.us-east-1.amazonaws.com"; // AWS Endpoint
 
 long lastMsg = 0; // variável que armazena o tempo em milisegundos da última mensagem
 char msg[256];  //buffer para conter a mensagem a ser publicada
@@ -171,7 +171,7 @@ void setup()
 
   espClient.setBufferSizes(512, 512); // seta o valor máximo do buffer para o cliente MQTT
 
-  config_wifi("/wifi_credential.txt"); // configuração a rede wifi
+  //config_wifi("/wifi_credential.txt"); // configuração a rede wifi
   
   pinMode(LED_BUILTIN, OUTPUT); // define o pino da LED como pino de saída              
   //digitalWrite(2, LOW); // atribui o status da LED como ligado
@@ -267,33 +267,53 @@ void loop() {
     client_pubsub.publish("$aws/things/NodeMCU/shadow/update", msg);
   }
   
-  /*long now = millis();
-  if (now-lastMsg > 5000) // se o tempo da mensagem atual menos o tempo da ultima mensagem ultrapassar os 5 segundos
+  long now = millis();
+  if (now-lastMsg > 1000) // se o tempo da mensagem atual menos o tempo da ultima mensagem ultrapassar os 5 segundos
   {
     lastMsg = now;// recupera o tempo atual em milissegundos
     
     hour = ntpClient.getHours(); // recupera a hora atual
     minute = ntpClient.getMinutes(); // recupera o minuto atual
     
-    
     String horas = (String)hour+":"+(String)minute;// formata o horário atual
     Serial.print("Horas: ");
     Serial.println(horas);
+
+    
     
     doc.clear(); // apaga o doc do json
 
-    // condição que diferencia a mensagem de ligar e desligar
-    if(status_LED == LOW)
-    {
-      doc["state"]["reported"]["status_LED"] = "LIGADO";
-    }else {
-      doc["state"]["reported"]["status_LED"] = "DESLIGADO"; 
+    String c;
+    if(Serial.available()){
+      c = Serial.readString();
     }
+  //delay(10);
+  /*if(Serial.available()) {
+     c = Serial.readString(); //VARIÁVEL RESPONSÁVEL POR RECEBER O CARACTER DIGITADO NA ENTRADA DE DADOS DO MONITOR SERIAL
+  }*/
+    
+  if(!c.equals("")) {
+    Serial.println(c);
+    doc["state"]["reported"]["sensor"] = c;
     serializeJson(doc, msg); // serializa a mensagem Json
     Serial.print("Publish message: ");
     Serial.println(msg);
   
     // publicar mensagens no tópico "$aws/things/NodeMCU/shadow/update"
     client_pubsub.publish("$aws/things/NodeMCU/shadow/update", msg);
-  }*/
+    /*if (c == 'b'){ //SE CARACTER DIGITADO FOR IGUAL A "b", FAZ
+      if (status == 0){ //SE VARIÁVEL FOR IGUAL A 0(DESLIGADO), FAZ
+        digitalWrite(pinoLed, LOW); //LIGA O LED
+        status = 1; //VARIÁVEL RECEBE O VALOR 1 (LIGADO)
+        Serial.println("LED LIGADO"); //IMPRIME O TEXTO NO MONITOR SERIAL
+      }else{ //SENÃO, FAZ
+        digitalWrite(pinoLed, HIGH); //DESLIGA O LED
+        status = 0; //VARIÁVEL RECEBE O VALOR 0 (DESLIGADO)
+        Serial.println("LED DESLIGADO"); //IMPRIME O TEXTO NO MONITOR SERIAL
+      }
+    }*/
+  }
+  c = "";
+    
+  }
 }  
