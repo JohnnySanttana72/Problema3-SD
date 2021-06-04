@@ -2,12 +2,19 @@ import serial
 import numpy as np
 import keyboard
 from time import sleep
+import time
 
 opcao = 0
-possibilidade1 = np.array([[-0.0088705, 9.357309341, 2.323247433,
-                   -0.008248, -0.043591999, -0.004061]])
+file = open('teste100linhas.txt', 'r')
+matriz = []
 
-# possibilidade1 = '-0.0088705, 9.357309341, 2.323247433,-0.008248, -0.043591999, -0.004061 | -0.0088705, 9.357309341, 2.323247433,-0.008248, -0.043591999, -0.004061 '
+for line in file:
+    temp = line.rstrip('\n').split(", ")
+    matriz.append(temp)
+
+sensor1 = np.array(matriz, dtype=np.float32)
+# sensor1 = np.around(sensor1, 2)
+
 class Comunicacao():
 
     def SerialInit(self, NomePorta, Velocidade, TimeRX, TimeTX):
@@ -27,12 +34,12 @@ class Comunicacao():
 
         try:
             self.PortaCom.flushOutput()
-            TamPac = DadosTx[3]
-            for i in range(TamPac):
-                DadoTxByte = bytes((DadosTx[i],))
+            # TamPac = DadosTx[3]
+            # for i in range(TamPac):
+            DadoTxByte = bytearray(DadosTx)
 
-                self.PortaCom.write(DadoTxByte)
-                print(DadoTxByte)
+            self.PortaCom.write(DadoTxByte)
+            # print(DadoTxByte)
 
         except Exception:
             print("Erro Escrita")
@@ -45,7 +52,7 @@ class Comunicacao():
 
             if (self.PortaCom.in_waiting > 0):
                 LeituraSerial[i] = self.PortaCom.read()
-                LeituraSerial[i] = self.ByteToInt(LeituraSerial[i])
+                LeituraSerial[i] = self.ByteToString(LeituraSerial[i])
                 print(LeituraSerial[i])
 
             else:
@@ -54,47 +61,67 @@ class Comunicacao():
 
 # DadosTx = '[1,2,3,4,5,6,7,8,9,10]'.encode('utf-8')
 # DadosRx = [0] * 100
-# PortaCom = Comunicacao()
-# PortaCom.SerialInit('COM4', 115200, 1, 1)
-# PortaCom.WriteSerial(DadosTx)
+PortaCom = Comunicacao()
+PortaCom.SerialInit('COM4', 115200, 1, 1)
 
+for i in sensor1:
+    print(i)
+    PortaCom.WriteSerial(np.array(i))
+    time.sleep(2)
+
+# for i in sensor1:
+# #     PortaCom.WriteSerial(i)
+# #     PortaCom.Leitura_Serial()
+#     print(i)
+
+
+# arduino=serial.Serial('COM4',115200)
+#
+#
+#
+#
+# for i in possibilidade1:
+#     print(i)
+#     data = bytearray(i)
+#     arduino.write(data)
+#
 # for i in np.nditer(possibilidade1):
-#   print(i)
+#     print(i)
 
-while opcao != 5:
-    print('\n MENU:')
-    print('[1] Teste 1 Movimento normal')
-    print('[2] Teste 2 Acidente com Queda e Deslizamento')
-    print('[3] Teste 3 Acidente Projeção da Pessoa')
-    print('[4] Teste 3 Acidente Choque e Parada Estantânea')
-    print('[5] Sair')
-    opcao = int(input('Escolha a opção de teste: '))
-
-    if opcao == 1:
-        while True:
-            if keyboard.is_pressed('q'):
-                print("\nFim da execução do Teste 1")
-                break
-    elif opcao == 2:
-        while True:
-            if keyboard.is_pressed('q'):
-                print("\nFim da execução do Teste 2")
-                break
-    elif opcao == 3:
-        while True:
-            if keyboard.is_pressed('q'):
-                print("\nFim da execução do Teste 3")
-                break
-    elif opcao == 4:
-        while True:
-            if keyboard.is_pressed('q'):
-                print("\nFim da execução do Teste 4")
-                break
-    elif opcao == 5:
-        print("Encerrando...")
-    else:
-        print('Opção inválida. Tente de novo')
-    sleep(2)
+# while opcao != 5:
+#     print('\n MENU:')
+#     print('[1] Teste 1 Movimento normal')
+#     print('[2] Teste 2 Acidente com Queda e Deslizamento')
+#     print('[3] Teste 3 Acidente Projeção da Pessoa')
+#     print('[4] Teste 3 Acidente Choque e Parada Estantânea')
+#     print('[5] Sair')
+#     opcao = int(input('Escolha a opção de teste: '))
+#
+#     if opcao == 1:
+#         while True:
+#             if keyboard.is_pressed('q'):
+#                 print("\nFim da execução do Teste 1")
+#                 break
+#     elif opcao == 2:
+#         while True:
+#             if keyboard.is_pressed('q'):
+#                 print("\nFim da execução do Teste 2")
+#                 break
+#     elif opcao == 3:
+#         while True:
+#             if keyboard.is_pressed('q'):
+#                 print("\nFim da execução do Teste 3")
+#                 break
+#     elif opcao == 4:
+#         while True:
+#             if keyboard.is_pressed('q'):
+#                 print("\nFim da execução do Teste 4")
+#                 break
+#     elif opcao == 5:
+#         print("Encerrando...")
+#     else:
+#         print('Opção inválida. Tente de novo')
+#     sleep(2)
 
 
 # ser = serial.Serial()

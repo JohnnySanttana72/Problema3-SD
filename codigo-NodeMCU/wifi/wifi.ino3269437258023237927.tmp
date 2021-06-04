@@ -36,9 +36,9 @@ const char* endpoint_aws = "a3b300y0i6kc5u-ats.iot.us-east-1.amazonaws.com"; // 
 
 long lastMsg = 0; // variável que armazena o tempo em milisegundos da última mensagem
 char msg[256];  //buffer para conter a mensagem a ser publicada
-//DynamicJsonDocument doc(1024); // cria um documento do formato json ArduiJson 6.17.3
-StaticJsonBuffer<1024> json; // cria um documento do formato json ArduiJson 5.13.5
-
+//DynamicJsonDocument doc(1024); // cria um documento do formato json
+StaticJsonBuffer<1024> json;
+JsonObject& doc = json.createObject();
 
 int timeZone = -3; // configuração do fuso horário de brasília
 
@@ -82,11 +82,11 @@ File file_historico;
 //Função que recebe os dados da publicação
 void callback(char* topic, byte* payload, unsigned int length) 
 {
-  /*StaticJsonDocument<256> docs; // variável que é usada para decodificar a mensagem Json ArduiJson 6.17.3
-  deserializeJson(docs, payload, length); // decodifica a mensagem Json ArduiJson 6.17.3
+  /*StaticJsonDocument<256> docs; // variável que é usada para decodificar a mensagem Json
+  deserializeJson(docs, payload, length); // decodifica a mensagem Json
  */
-  StaticJsonBuffer<256> jsonBuffer; // variável que é usada para decodificar a mensagem Json ArduiJson 6.17.3
-  JsonObject& docs = jsonBuffer.parseObject((char *)payload); // decodifica a mensagem Json ArduiJson 5.13.5
+  StaticJsonBuffer<256> jsonBuffer;
+  JsonObject& docs = jsonBuffer.parseObject((char *)payload);
   Serial.println(msg);
   
   Serial.print("Message arrived [");
@@ -297,21 +297,18 @@ void loop() {
     responder = false;
     /*if(status_LED == LOW)
     {*/
-    json.clear(); 
-    JsonObject& doc = json.createObject();
-    JsonObject& state = doc.createNestedObject("state"); // cria documento Json ArduiJson 5.13.5
-    JsonObject& doc2 = json.createObject(); // cria documento 2 Json ArduiJson 5.13.5
-    doc2["estado"] = "CONECTADO"; // adiciona valor ao Json ArduiJson 5.13.5
-    state["reported"] = doc2; // adiciona conteudo ao Json Json ArduiJson 5.13.5
+    JsonObject& state = doc.createNestedObject("state");
+    state["reported"] = doc.createNestedObject();
+    //report["estado"] = "CONECTADO";
     
     //doc["state"]["reported"]["estado"] = "CONECTADO";
     /*}else {
-      doc["state"]["reported"]["status_LED"] = "DESLIGADO";  // cria documento Json ArduiJson 6.17.3
+      doc["state"]["reported"]["status_LED"] = "DESLIGADO"; 
     }*/
   
     //doc.printTo(msg);
-    doc.printTo(msg, sizeof(msg)); // serializa a mensagem Json 5.13.5
-    //serializeJson(doc, msg); // serializa a mensagem Json 6.17.3
+    doc.printTo(msg, sizeof(msg));
+    //serializeJson(doc, msg); // serializa a mensagem Json
     Serial.println(msg);
   
     // publicar mensagens no tópico "$aws/things/NodeMCU/shadow/update"
@@ -340,7 +337,6 @@ void loop() {
     
     if (Serial.available()) {
     //doc.clear(); // apaga o doc do json
-    json.clear(); 
     if (Serial.available() > 0) {
             Serial.readBytesUntil('\n', inputBuffer, 16);
 
@@ -349,15 +345,11 @@ void loop() {
                 acelerometro.b[i] = inputBuffer[4 + i];
                 giroscopio.b[i] = inputBuffer[8 + i];
             }
-            JsonObject& doc = json.createObject();
-            JsonObject& state = doc.createNestedObject("state"); // cria documento Json ArduiJson 5.13.5
-            JsonObject& doc2 = json.createObject(); // cria documento 2 Json ArduiJson 5.13.5
-            doc2["sensor"] = (String)tempo.f +" "+(String)acelerometro.f +" "+(String)giroscopio.f; // adiciona valor ao Json ArduiJson 5.13.5
-            state["reported"] = doc2; // adiciona conteudo ao Json Json ArduiJson 5.13.5
  
-            //doc["state"]["reported"]["sensor"] = (String)tempo.f +" "+(String)acelerometro.f +" "+(String)giroscopio.f;
+            doc["state"]["reported"]["sensor"] = (String)tempo.f +" "+(String)acelerometro.f +" "+(String)giroscopio.f;
             //serializeJson(doc, msg);
-            doc.printTo(msg, sizeof(msg));
+            JsonArray& arr = json.createArray();
+            arr.printTo(msg);
 
             client_pubsub.publish("$aws/things/NodeMCU/shadow/update", msg);
 
