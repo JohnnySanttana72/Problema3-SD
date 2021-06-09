@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateConsumptionMonthsTable extends Migration
+class CreateDadosLogsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,10 +13,11 @@ class CreateConsumptionMonthsTable extends Migration
      */
     public function up()
     {
-        Schema::create('consumption_months', function (Blueprint $table) {
+        Schema::create('dados_logs', function (Blueprint $table) {
             $table->id();
-            $table->float('consumo');
-            $table->float('valor');
+            $table->string('estado')->nullable();
+            $table->string('acidente')->nullable();
+            $table->foreignId('logs_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -28,6 +29,6 @@ class CreateConsumptionMonthsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('consumption_months');
+        Schema::dropIfExists('dados_logs');
     }
 }

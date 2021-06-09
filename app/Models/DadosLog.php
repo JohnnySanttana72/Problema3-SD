@@ -4,16 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
-class Month extends Model
+class DadosLog extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'nome', 'consumption_months_id',
+        'estado', 'acidente', 'logs_id'
     ];
 
-    public function consumption() {
-    	return $this->hasOne('App\Models\ConsumptionMonth', 'id');
+    public function log() {
+        return $this->belogsTo('App\Models\Log', 'logs_id');
     }
 }

@@ -14,7 +14,7 @@
 #include <PubSubClient.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
-#include <FirebaseArduino.h>
+//#include <FirebaseArduino.h>
 #include <ArduinoJson.h> 
 #include <FS.h>
 #include <string.h>
@@ -25,8 +25,8 @@ extern "C" {
 }
 
 
-/*#define FIREBASE_HOST "monitoramento-64d8a-default-rtdb.firebaseio.com" //seu host exemplo.firebaseio.com
-#define FIREBASE_AUTH "AIzaSyD4BZgA3f3M1gPU6WAOORL9cdaA-gfoupk"*/
+//#define FIREBASE_HOST "monitoramento2-8250a-default-rtdb.firebaseio.com" //seu host exemplo.firebaseio.com
+//#define FIREBASE_AUTH "ieg7e20ROzZCjaC9TfVhsHdblDCqeWdPaRBWKhut"
 
 void callback(char* topic, byte* payload, unsigned int length); 
 
@@ -35,9 +35,10 @@ const char* password = "GJDK669JSF62"; //variável para a senha da rede Wifi
 const char* endpoint_aws = "a3b300y0i6kc5u-ats.iot.us-east-1.amazonaws.com"; // AWS Endpoint
 
 long lastMsg = 0; // variável que armazena o tempo em milisegundos da última mensagem
+long lastMsg2 = 0;
 char msg[256];  //buffer para conter a mensagem a ser publicada
-//DynamicJsonDocument doc(1024); // cria um documento do formato json ArduiJson 6.17.3
-StaticJsonBuffer<1024> json; // cria um documento do formato json ArduiJson 5.13.5
+DynamicJsonDocument doc(1024); // cria um documento do formato json ArduiJson 6.17.3
+//StaticJsonBuffer<1024> json; // cria um documento do formato json ArduiJson 5.13.5
 
 
 int timeZone = -3; // configuração do fuso horário de brasília
@@ -82,30 +83,36 @@ File file_historico;
 //Função que recebe os dados da publicação
 void callback(char* topic, byte* payload, unsigned int length) 
 {
-  /*StaticJsonDocument<256> docs; // variável que é usada para decodificar a mensagem Json ArduiJson 6.17.3
+  StaticJsonDocument<256> docs; // variável que é usada para decodificar a mensagem Json ArduiJson 6.17.3
   deserializeJson(docs, payload, length); // decodifica a mensagem Json ArduiJson 6.17.3
- */
-  StaticJsonBuffer<256> jsonBuffer; // variável que é usada para decodificar a mensagem Json ArduiJson 6.17.3
+ 
+  /*StaticJsonBuffer<256> jsonBuffer; // variável que é usada para decodificar a mensagem Json ArduiJson 6.17.3
   JsonObject& docs = jsonBuffer.parseObject((char *)payload); // decodifica a mensagem Json ArduiJson 5.13.5
-  Serial.println(msg);
+  Serial.println(msg);*/
   
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
   
   String msg = docs["state"]["desired"]["estado"]; // variável que recebe o Json decodificado do status da LED para o acionamento remoto
-   Serial.println(msg);
+  String reset_serial = docs["state"]["desired"]["reset"]; // variável que recebe o Json decodificado do status da LED para o acionamento remoto
 
   if (msg != NULL){
-    if (msg.equals("um")){
+    /*if (msg.equals("um")){
       a = 1000;
     } else if (msg.equals("tres")){
       a = 2000;
     } else if (msg.equals("cinco")){
       a = 5000;
-    }
+    }*/
     responder = true;
-    responder2 = true;
+    //responder2 = true;
+  }
+
+  if(reset_serial != NULL) {
+    Serial.println("REINICIAR ENVIO");
+    Serial.flush();
+    responder2 = false;
   }
 }
 //Conectando a um número de porta MQTT 8883 conforme padrão
@@ -226,18 +233,14 @@ void setup()
   Serial.println("WiFi conectado");
   Serial.print("Endereço IP: "); // Escreve na janela da serial
   Serial.println(WiFi.localIP()); // Escreve na  o IP recebido dentro da rede sem fio (recebido de forma automática)
-
-  setupNTP();// inicia o servidor NTP para a recuperar o horário atual(horário de Brasília) 
   
   delay(1000); // Intervalo de 1000 milisegundos
 
   config_certify();// configura os certificados
 
-  /*Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
-  
-  float voltagem = 10.2;
-  
-  Firebase.pushFloat("LDR", voltagem);*/
+  //Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+
+  setupNTP();// inicia o servidor NTP para a recuperar o horário atual(horário de Brasília) 
 }
 
 // função para reconectar ao broker MQTT
@@ -274,6 +277,9 @@ void reconnect()
 }
 
 void loop() {
+  /*int voltagem = 10;
+  Serial.println(voltagem);
+  Firebase.setInt("LDR/", voltagem);*/
   if(responder2){
     digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
     delay(a);                       // wait for a second
@@ -283,35 +289,38 @@ void loop() {
   if (!client_pubsub.connected()) // Se não houver a conexão
   {
     digitalWrite(status_LED, LOW);
+    a = 500;
+    responder2 = true;
     reconnect(); // tenta reconectar
   }
+  responder2 = false;
   client_pubsub.loop(); //chama novamente a função loop 
-
+  
   if(responder) {
 
-    digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+    /*digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
     delay(1000);                       // wait for a second
     digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
-    delay(1000);
+    */
+    delay(2000);
   
     responder = false;
     /*if(status_LED == LOW)
     {*/
-    json.clear(); 
+    /*json.clear(); 
     JsonObject& doc = json.createObject();
     JsonObject& state = doc.createNestedObject("state"); // cria documento Json ArduiJson 5.13.5
     JsonObject& doc2 = json.createObject(); // cria documento 2 Json ArduiJson 5.13.5
     doc2["estado"] = "CONECTADO"; // adiciona valor ao Json ArduiJson 5.13.5
     state["reported"] = doc2; // adiciona conteudo ao Json Json ArduiJson 5.13.5
-    
-    //doc["state"]["reported"]["estado"] = "CONECTADO";
+    */
+    doc["state"]["reported"]["estado"] = "CONECTADO";
     /*}else {
       doc["state"]["reported"]["status_LED"] = "DESLIGADO";  // cria documento Json ArduiJson 6.17.3
     }*/
   
-    //doc.printTo(msg);
-    doc.printTo(msg, sizeof(msg)); // serializa a mensagem Json 5.13.5
-    //serializeJson(doc, msg); // serializa a mensagem Json 6.17.3
+    //doc.printTo(msg, sizeof(msg)); // serializa a mensagem Json 5.13.5
+    serializeJson(doc, msg); // serializa a mensagem Json 6.17.3
     Serial.println(msg);
   
     // publicar mensagens no tópico "$aws/things/NodeMCU/shadow/update"
@@ -339,29 +348,53 @@ void loop() {
     Serial.println(epochTime24);
     
     if (Serial.available()) {
-    //doc.clear(); // apaga o doc do json
-    json.clear(); 
-    if (Serial.available() > 0) {
-            Serial.readBytesUntil('\n', inputBuffer, 16);
+      doc.clear(); // apaga o doc do json
+      //json.clear(); 
+      if (Serial.available() > 0) {
+        responder2 = false;
+        Serial.readBytesUntil('\n', inputBuffer, 16);
+        
+        for (int i = 0; i < 4; i++) {
+            tempo.b[i] = inputBuffer[i];
+            acelerometro.b[i] = inputBuffer[4 + i];
+            giroscopio.b[i] = inputBuffer[8 + i];
+        }
+        
+        if(acelerometro.f > 9.5 && giroscopio.f > 0.01) {
+          Serial.println("OCORREU ACIDENTE");
+          Serial.flush();
 
-            for (int i = 0; i < 4; i++) {
-                tempo.b[i] = inputBuffer[i];
-                acelerometro.b[i] = inputBuffer[4 + i];
-                giroscopio.b[i] = inputBuffer[8 + i];
-            }
-            JsonObject& doc = json.createObject();
+          a = 2000;
+          responder2 = true;
+            
+          long now2 = millis();
+          if (now2-lastMsg2 > 2000) {
+
+            lastMsg2 = now2;
+
+            /*JsonObject& doc = json.createObject();
             JsonObject& state = doc.createNestedObject("state"); // cria documento Json ArduiJson 5.13.5
             JsonObject& doc2 = json.createObject(); // cria documento 2 Json ArduiJson 5.13.5
-            doc2["sensor"] = (String)tempo.f +" "+(String)acelerometro.f +" "+(String)giroscopio.f; // adiciona valor ao Json ArduiJson 5.13.5
-            state["reported"] = doc2; // adiciona conteudo ao Json Json ArduiJson 5.13.5
- 
-            //doc["state"]["reported"]["sensor"] = (String)tempo.f +" "+(String)acelerometro.f +" "+(String)giroscopio.f;
-            //serializeJson(doc, msg);
-            doc.printTo(msg, sizeof(msg));
-
+            doc2["acidente"] = "Acidente:" + horas + ", Tempo:" + (String)tempo.f; // adiciona valor ao Json ArduiJson 5.13.5
+            state["reported"] = doc2;*/
+            doc["state"]["reported"]["acidente"] = "Horário do Acidente:" + horas + ", Tempo:" + (String)tempo.f;
+            serializeJson(doc, msg);
             client_pubsub.publish("$aws/things/NodeMCU/shadow/update", msg);
+          }
+        }
+        /*JsonObject& doc = json.createObject();
+        JsonObject& state = doc.createNestedObject("state"); // cria documento Json ArduiJson 5.13.5
+        JsonObject& doc2 = json.createObject(); // cria documento 2 Json ArduiJson 5.13.5
+        doc2["sensor"] = (String)tempo.f +" "+(String)acelerometro.f +" "+(String)giroscopio.f; // adiciona valor ao Json ArduiJson 5.13.5
+        state["reported"] = doc2; // adiciona conteudo ao Json Json ArduiJson 5.13.5
+        */
+        //doc["state"]["reported"]["sensor"] = (String)tempo.f +" "+(String)acelerometro.f +" "+(String)giroscopio.f;
+        //serializeJson(doc, msg);
+        //doc.printTo(msg, sizeof(msg));
 
-    }
+        //client_pubsub.publish("$aws/things/NodeMCU/shadow/update", msg);
+
+      }
     }
     /*String c;
     if(Serial.available()){

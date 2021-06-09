@@ -26,6 +26,8 @@ Route::post('/republishMqtt', 'IndexController@republishMqtt');
 
 Route::post('/subscribeMqtt', 'IndexController@subscribeMqtt');
 
-Route::post('/calConsumo', 'IndexController@calConsumo');
+Route::post('/logPlaca', 'IndexController@logPlaca');
+
+Route::post('/contatoAtualizar', 'IndexController@contatoAtualizar');
 
 

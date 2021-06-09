@@ -44,19 +44,30 @@ class Comunicacao():
         except Exception:
             print("Erro Escrita")
 
-    def Leitura_Serial(self, DadosRx):
+    def Leitura_Serial(self, tipo):
+        data = self.PortaCom.readline()
 
-        LeituraSerial = [0] * 200
+        # decode_data = str(data[0:len(data)].decode("utf-8"))
+        if "OCORREU ACIDENTE" in str(data) and tipo == 'interrupcao':
+            print(data)
+            return True
+        elif "REINICIAR ENVIO" in str(data) and tipo == 'reiniciar':
+            print(data)
+            return True
+        else:
+            return False
 
-        for i in range(200):
-
-            if (self.PortaCom.in_waiting > 0):
-                LeituraSerial[i] = self.PortaCom.read()
-                LeituraSerial[i] = self.ByteToString(LeituraSerial[i])
-                print(LeituraSerial[i])
-
-            else:
-                break
+        # LeituraSerial = [0] * 200
+        #
+        # for i in range(200):
+        #
+        #     if (self.PortaCom.in_waiting > 0):
+        #         LeituraSerial[i] = self.PortaCom.read()
+        #         LeituraSerial[i] = self.ByteToInt(LeituraSerial[i])
+        #         print(LeituraSerial[i])
+        #
+        #     else:
+        #         break
 
 
 # DadosTx = '[1,2,3,4,5,6,7,8,9,10]'.encode('utf-8')
@@ -64,16 +75,22 @@ class Comunicacao():
 PortaCom = Comunicacao()
 PortaCom.SerialInit('COM4', 115200, 1, 1)
 
-for i in sensor1:
-    print(i)
-    PortaCom.WriteSerial(np.array(i))
-    time.sleep(2)
+iniciar = True
 
-# for i in sensor1:
-# #     PortaCom.WriteSerial(i)
-# #     PortaCom.Leitura_Serial()
-#     print(i)
-
+while True:
+    if(iniciar):
+        if keyboard.is_pressed('q'):
+            print("\nFim da execução")
+            break
+        for i in sensor1:
+            print(i)
+            PortaCom.WriteSerial(np.array(i))
+            time.sleep(3)
+            if(PortaCom.Leitura_Serial('interrupcao')):
+                iniciar = False
+                break
+    if(PortaCom.Leitura_Serial('reiniciar')):
+        iniciar = True
 
 # arduino=serial.Serial('COM4',115200)
 #

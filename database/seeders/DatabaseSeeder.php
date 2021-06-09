@@ -24,8 +24,8 @@ class DatabaseSeeder extends Seeder
         // $this->call([ImageTableSeeder::class,AdminTableSeeder::class,]);
         // \App\Models\Property::factory(10)->create();
         // \App\Models\Detail::factory(40)->create();
-        $this->call(ConsumptionMonthSeeder::class);
-        $this->call(MonthSeeder::class);
+        $this->call(Log::class);
+        // $this->call(MonthSeeder::class);
         // \App\Models\Month::factory(40)->create();
         // \App\Models\ImageMonth::factory(40)->create();
 
