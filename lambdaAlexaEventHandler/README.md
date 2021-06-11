@@ -48,6 +48,6 @@ Alguns requitos são importantes para executar esse projeto em sua máquina:
 * **Johnny da Silva** - *Initial work* - [JohnnySanttana72](https://github.com/JohnnySanttana72)
 * **Rafael Brito** - [rafabrito](https://github.com/rafabrito)
 
-Veja a lista de [contribuidores](https://github.com/JohnnySanttana72/automacao-resencial/graphs/contributors) que participaram deste projeto.
+Veja a lista de [contribuidores](https://github.com/JohnnySanttana72/Problema3-SD/graphs/contributors) que participaram deste projeto.
 
 
