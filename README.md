@@ -22,7 +22,7 @@ Para executar esse projeto em sua máquina basta clonar esse repositório usando
 
 * É necessário ter o Python instalado na sua máquina para executar programa que irá enviar pela Serial os valores relativos o tempo decorrido do acidente, do valor absolutos do acelerômetro e do giroscópio [envio_serial_mpu6050](https://github.com/JohnnySanttana72/Problema3-SD/tree/main/envio_serial_mpu6050).
 
-#### Istalar IDE Arduíno
+#### Instalar IDE Arduíno
 
 * [Arduino IDE](https://www.arduino.cc/en/software) - IDE para compilar códigos que são embarcados em qualquer tipo de placa.
 
