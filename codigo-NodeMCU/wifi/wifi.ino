@@ -24,22 +24,16 @@ extern "C" {
   #include "user_interface.h"
 }
 
-
-//#define FIREBASE_HOST "monitoramento2-8250a-default-rtdb.firebaseio.com" //seu host exemplo.firebaseio.com
-//#define FIREBASE_AUTH "ieg7e20ROzZCjaC9TfVhsHdblDCqeWdPaRBWKhut"
-
 void callback(char* topic, byte* payload, unsigned int length); 
 
-const char* ssid = "MERCUSYS_09E2"; //variável para a rede Wifi
-const char* password = "GJDK669JSF62"; //variável para a senha da rede Wifi
+const char* ssid; //variável para a rede Wifi
+const char* password; //variável para a senha da rede Wifi
 const char* endpoint_aws = "a3b300y0i6kc5u-ats.iot.us-east-1.amazonaws.com"; // AWS Endpoint
 
 long lastMsg = 0; // variável que armazena o tempo em milisegundos da última mensagem
 long lastMsg2 = 0;
 char msg[256];  //buffer para conter a mensagem a ser publicada
 DynamicJsonDocument doc(1024); // cria um documento do formato json ArduiJson 6.17.3
-//StaticJsonBuffer<1024> json; // cria um documento do formato json ArduiJson 5.13.5
-
 
 int timeZone = -3; // configuração do fuso horário de brasília
 
@@ -69,16 +63,10 @@ int a = 1000;
 
 unsigned char inputBuffer[16];
 
-union {float f; unsigned char b[4];} tempo;
-union {float f; unsigned char b[4];} acelerometro;
-/*union {float f; unsigned char b[8];} acelY;
-union {float f; unsigned char b[8];} acelZ;*/
+union {float f; unsigned char b[4];} tempo; // valor do tempo ao ser recebido na Serial
+union {float f; unsigned char b[4];} acelerometro; // valor do acelerometro ao ser recebido na Serial
+union {float f; unsigned char b[4];} giroscopio; // // valor do giroscopio ao ser recebido na Serial
 
-union {float f; unsigned char b[4];} giroscopio;
-/*union {float f; unsigned char b[8];} giroY;
-union {float f; unsigned char b[8];} giroZ;*/
-
-File file_historico;
 
 //Função que recebe os dados da publicação
 void callback(char* topic, byte* payload, unsigned int length) 
@@ -86,10 +74,6 @@ void callback(char* topic, byte* payload, unsigned int length)
   StaticJsonDocument<256> docs; // variável que é usada para decodificar a mensagem Json ArduiJson 6.17.3
   deserializeJson(docs, payload, length); // decodifica a mensagem Json ArduiJson 6.17.3
  
-  /*StaticJsonBuffer<256> jsonBuffer; // variável que é usada para decodificar a mensagem Json ArduiJson 6.17.3
-  JsonObject& docs = jsonBuffer.parseObject((char *)payload); // decodifica a mensagem Json ArduiJson 5.13.5
-  Serial.println(msg);*/
-  
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
@@ -97,22 +81,21 @@ void callback(char* topic, byte* payload, unsigned int length)
   String msg = docs["state"]["desired"]["estado"]; // variável que recebe o Json decodificado do status da LED para o acionamento remoto
   String reset_serial = docs["state"]["desired"]["reset"]; // variável que recebe o Json decodificado do status da LED para o acionamento remoto
 
+  //condição que permite devolver o estado da placa
   if (msg != NULL){
-    /*if (msg.equals("um")){
-      a = 1000;
-    } else if (msg.equals("tres")){
-      a = 2000;
-    } else if (msg.equals("cinco")){
-      a = 5000;
-    }*/
-    responder = true;
-    //responder2 = true;
+    if (msg.equals("verificar estado")){
+      responder = true;
+    }
   }
 
+  //condição para reiniciar o envio de dados pela Serial
   if(reset_serial != NULL) {
-    Serial.println("REINICIAR ENVIO");
-    Serial.flush();
-    responder2 = false;
+    if(reset_serial.equals("reiniciar")) {
+      Serial.println("REINICIAR ENVIO");
+      Serial.flush();
+      responder = false;
+      responder2 = false;
+    }
   }
 }
 //Conectando a um número de porta MQTT 8883 conforme padrão
@@ -192,10 +175,6 @@ void config_certify()
   espClient.setCACert(binaryCA, len);
 }
 
-void escreverHistorico() {
- 
-}
-
 // função que inicializa as configurações para a conexão da rede Wifi, conexão MQTT
 void setup()
 {
@@ -204,20 +183,11 @@ void setup()
   Serial.println();   // Pula uma linha na janela da serial
 
   espClient.setBufferSizes(512, 512); // seta o valor máximo do buffer para o cliente MQTT
-  /*file_historico = SPIFFS.open("/historico.txt","w"); 
 
-  if(!file_historico){
-    Serial.println("Erro ao abrir arquivo Histórico!");
-  } else {
-    file_historico.println("Qualquer Coisa");
-    Serial.print("gravou estado: ");
-  }
-  file_historico.close();
-  //config_wifi("/wifi_credential.txt"); // configuração a rede wifi
-  */
+  config_wifi("/wifi_credential.txt"); // configuração a rede wifi
+  
   pinMode(LED_BUILTIN, OUTPUT); // define o pino da LED como pino de saída              
   //digitalWrite(2, LOW); // atribui o status da LED como ligado
-
   
   WiFi.begin(ssid, password); //Passa os parâmetros para a função que vai fazer a conexão com a rede sem fio
   delay(1000); // Intervalo de 1000 milisegundos
@@ -237,8 +207,6 @@ void setup()
   delay(1000); // Intervalo de 1000 milisegundos
 
   config_certify();// configura os certificados
-
-  //Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
 
   setupNTP();// inicia o servidor NTP para a recuperar o horário atual(horário de Brasília) 
 }
@@ -277,9 +245,6 @@ void reconnect()
 }
 
 void loop() {
-  /*int voltagem = 10;
-  Serial.println(voltagem);
-  Firebase.setInt("LDR/", voltagem);*/
   if(responder2){
     digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
     delay(a);                       // wait for a second
@@ -298,26 +263,12 @@ void loop() {
   
   if(responder) {
 
-    /*digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
-    delay(1000);                       // wait for a second
-    digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
-    */
     delay(2000);
   
     responder = false;
-    /*if(status_LED == LOW)
-    {*/
-    /*json.clear(); 
-    JsonObject& doc = json.createObject();
-    JsonObject& state = doc.createNestedObject("state"); // cria documento Json ArduiJson 5.13.5
-    JsonObject& doc2 = json.createObject(); // cria documento 2 Json ArduiJson 5.13.5
-    doc2["estado"] = "CONECTADO"; // adiciona valor ao Json ArduiJson 5.13.5
-    state["reported"] = doc2; // adiciona conteudo ao Json Json ArduiJson 5.13.5
-    */
+    doc.clear();
+    
     doc["state"]["reported"]["estado"] = "CONECTADO";
-    /*}else {
-      doc["state"]["reported"]["status_LED"] = "DESLIGADO";  // cria documento Json ArduiJson 6.17.3
-    }*/
   
     //doc.printTo(msg, sizeof(msg)); // serializa a mensagem Json 5.13.5
     serializeJson(doc, msg); // serializa a mensagem Json 6.17.3
@@ -339,17 +290,9 @@ void loop() {
     Serial.print("Horas: ");
     Serial.println(horas);
 
-    unsigned long epochTime = ntpClient.getEpochTime();
-    Serial.print("Epoch Time: ");
-    Serial.println(epochTime);
-
-    unsigned long epochTime24 = epochTime + 24*60*60;
-    Serial.print("Epoch Time 24 Hous: ");
-    Serial.println(epochTime24);
-    
+    // Condição que verifica se tem algo na Serial
     if (Serial.available()) {
       doc.clear(); // apaga o doc do json
-      //json.clear(); 
       if (Serial.available() > 0) {
         responder2 = false;
         Serial.readBytesUntil('\n', inputBuffer, 16);
@@ -359,9 +302,10 @@ void loop() {
             acelerometro.b[i] = inputBuffer[4 + i];
             giroscopio.b[i] = inputBuffer[8 + i];
         }
-        
-        if(acelerometro.f > 9.5 && giroscopio.f > 0.01) {
-          Serial.println("OCORREU ACIDENTE");
+
+        // Condição que valida a ocorrência do acidente
+        if(acelerometro.f > 9.7 && giroscopio.f > 0.01) {
+          Serial.println("OCORREU ACIDENTE"); // Interrompe o envio de dados pela serial
           Serial.flush();
 
           a = 2000;
@@ -372,61 +316,12 @@ void loop() {
 
             lastMsg2 = now2;
 
-            /*JsonObject& doc = json.createObject();
-            JsonObject& state = doc.createNestedObject("state"); // cria documento Json ArduiJson 5.13.5
-            JsonObject& doc2 = json.createObject(); // cria documento 2 Json ArduiJson 5.13.5
-            doc2["acidente"] = "Acidente:" + horas + ", Tempo:" + (String)tempo.f; // adiciona valor ao Json ArduiJson 5.13.5
-            state["reported"] = doc2;*/
-            doc["state"]["reported"]["acidente"] = "Horário do Acidente:" + horas + ", Tempo:" + (String)tempo.f;
+            doc["state"]["reported"]["acidente"] = "Horário do Acidente: " + horas + ", Tempo decorrido: " + (String)tempo.f;
             serializeJson(doc, msg);
             client_pubsub.publish("$aws/things/NodeMCU/shadow/update", msg);
           }
         }
-        /*JsonObject& doc = json.createObject();
-        JsonObject& state = doc.createNestedObject("state"); // cria documento Json ArduiJson 5.13.5
-        JsonObject& doc2 = json.createObject(); // cria documento 2 Json ArduiJson 5.13.5
-        doc2["sensor"] = (String)tempo.f +" "+(String)acelerometro.f +" "+(String)giroscopio.f; // adiciona valor ao Json ArduiJson 5.13.5
-        state["reported"] = doc2; // adiciona conteudo ao Json Json ArduiJson 5.13.5
-        */
-        //doc["state"]["reported"]["sensor"] = (String)tempo.f +" "+(String)acelerometro.f +" "+(String)giroscopio.f;
-        //serializeJson(doc, msg);
-        //doc.printTo(msg, sizeof(msg));
-
-        //client_pubsub.publish("$aws/things/NodeMCU/shadow/update", msg);
-
       }
     }
-    /*String c;
-    if(Serial.available()){
-      c = Serial.readString();
-    }*/
-  //delay(10);
-  /*if(Serial.available()) {
-     c = Serial.readString(); //VARIÁVEL RESPONSÁVEL POR RECEBER O CARACTER DIGITADO NA ENTRADA DE DADOS DO MONITOR SERIAL
-  }*/
-    
-  /*if(!c.equals("")) {
-    Serial.println(c);
-    doc["state"]["reported"]["sensor"] = acelX;
-    serializeJson(doc, msg); // serializa a mensagem Json
-    Serial.print("Publish message: ");
-    Serial.println(msg);*/
-  
-    // publicar mensagens no tópico "$aws/things/NodeMCU/shadow/update"
-    //client_pubsub.publish("$aws/things/NodeMCU/shadow/update", msg);
-    /*if (c == 'b'){ //SE CARACTER DIGITADO FOR IGUAL A "b", FAZ
-      if (status == 0){ //SE VARIÁVEL FOR IGUAL A 0(DESLIGADO), FAZ
-        digitalWrite(pinoLed, LOW); //LIGA O LED
-        status = 1; //VARIÁVEL RECEBE O VALOR 1 (LIGADO)
-        Serial.println("LED LIGADO"); //IMPRIME O TEXTO NO MONITOR SERIAL
-      }else{ //SENÃO, FAZ
-        digitalWrite(pinoLed, HIGH); //DESLIGA O LED
-        status = 0; //VARIÁVEL RECEBE O VALOR 0 (DESLIGADO)
-        Serial.println("LED DESLIGADO"); //IMPRIME O TEXTO NO MONITOR SERIAL
-      }
-    }*/
   }
-  /*c = "";*/
-    
-  /*}*/
 }  

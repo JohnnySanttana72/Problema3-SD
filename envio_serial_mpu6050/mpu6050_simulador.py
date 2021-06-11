@@ -1,18 +1,16 @@
 import serial
 import numpy as np
-import keyboard
+# import keyboard
 from time import sleep
 import time
+import os
+clear = lambda: os.system('cls')
 
 opcao = 0
-file = open('teste100linhas.txt', 'r')
+
 matriz = []
+sensor1 = []
 
-for line in file:
-    temp = line.rstrip('\n').split(", ")
-    matriz.append(temp)
-
-sensor1 = np.array(matriz, dtype=np.float32)
 # sensor1 = np.around(sensor1, 2)
 
 class Comunicacao():
@@ -57,103 +55,64 @@ class Comunicacao():
         else:
             return False
 
-        # LeituraSerial = [0] * 200
-        #
-        # for i in range(200):
-        #
-        #     if (self.PortaCom.in_waiting > 0):
-        #         LeituraSerial[i] = self.PortaCom.read()
-        #         LeituraSerial[i] = self.ByteToInt(LeituraSerial[i])
-        #         print(LeituraSerial[i])
-        #
-        #     else:
-        #         break
 
 
-# DadosTx = '[1,2,3,4,5,6,7,8,9,10]'.encode('utf-8')
-# DadosRx = [0] * 100
+def lerArquivo(nome):
+    file = open(nome, 'r')
+    for line in file:
+        temp = line.rstrip('\n').split(", ")
+        matriz.append(temp)
+
 PortaCom = Comunicacao()
 PortaCom.SerialInit('COM4', 115200, 1, 1)
 
-iniciar = True
+def iniciarTeste(numeroTeste):
+    iniciar = True
 
-while True:
-    if(iniciar):
-        if keyboard.is_pressed('q'):
-            print("\nFim da execução")
+    print('\n')
+    print('Precione a Ctrl-c a qualquer momento para interromper o envio de dados')
+    print('\n')
+    while True:
+        try:
+
+            if (iniciar):
+                for i in sensor1:
+                    print(i)
+                    PortaCom.WriteSerial(np.array(i))
+                    time.sleep(3)
+                    if (PortaCom.Leitura_Serial('interrupcao')):
+                        iniciar = False
+                        break
+            if (PortaCom.Leitura_Serial('reiniciar')):
+                iniciar = True
+        except KeyboardInterrupt:
+            print('\nFim do Teste {}\n'.format(numeroTeste))
+            sleep(2)
+            clear()
             break
-        for i in sensor1:
-            print(i)
-            PortaCom.WriteSerial(np.array(i))
-            time.sleep(3)
-            if(PortaCom.Leitura_Serial('interrupcao')):
-                iniciar = False
-                break
-    if(PortaCom.Leitura_Serial('reiniciar')):
-        iniciar = True
 
-# arduino=serial.Serial('COM4',115200)
-#
-#
-#
-#
-# for i in possibilidade1:
-#     print(i)
-#     data = bytearray(i)
-#     arduino.write(data)
-#
-# for i in np.nditer(possibilidade1):
-#     print(i)
+while opcao != 4:
+    print('\n MENU:\n')
+    print('[1] Teste 1 Movimento normal')
+    print('[2] Teste 2 Monitoramento Involutário')
+    print('[3] Teste 3 Acidente')
+    print('[4] Sair')
+    opcao = int(input('Escolha a opção de teste: '))
 
-# while opcao != 5:
-#     print('\n MENU:')
-#     print('[1] Teste 1 Movimento normal')
-#     print('[2] Teste 2 Acidente com Queda e Deslizamento')
-#     print('[3] Teste 3 Acidente Projeção da Pessoa')
-#     print('[4] Teste 3 Acidente Choque e Parada Estantânea')
-#     print('[5] Sair')
-#     opcao = int(input('Escolha a opção de teste: '))
-#
-#     if opcao == 1:
-#         while True:
-#             if keyboard.is_pressed('q'):
-#                 print("\nFim da execução do Teste 1")
-#                 break
-#     elif opcao == 2:
-#         while True:
-#             if keyboard.is_pressed('q'):
-#                 print("\nFim da execução do Teste 2")
-#                 break
-#     elif opcao == 3:
-#         while True:
-#             if keyboard.is_pressed('q'):
-#                 print("\nFim da execução do Teste 3")
-#                 break
-#     elif opcao == 4:
-#         while True:
-#             if keyboard.is_pressed('q'):
-#                 print("\nFim da execução do Teste 4")
-#                 break
-#     elif opcao == 5:
-#         print("Encerrando...")
-#     else:
-#         print('Opção inválida. Tente de novo')
-#     sleep(2)
-
-
-# ser = serial.Serial()
-# ser.baudrate = 115200
-# ser.port = 'COM4'
-# ser.open()
-# values = "Ola Mundo".encode('utf-8')
-# # values = bytearray([4, 9, 62, 144, 56, 30, 147, 3, 210, 89, 111, 78, 184, 151, 17, 129])
-# ser.write(values)
-#
-# total = 0
-#
-# while total < len(values):
-#     print
-#     ord(ser.read(1))
-#     total = total + 1
-#
-# ser.close()
+    if opcao == 1:
+        lerArquivo("semMovimento.txt")
+        sensor1 = np.array(matriz, dtype=np.float32)
+        iniciarTeste(1)
+    elif opcao == 2:
+        lerArquivo("movimentoInvolutario.txt")
+        sensor1 = np.array(matriz, dtype=np.float32)
+        iniciarTeste(2)
+    elif opcao == 3:
+        lerArquivo("acidente.txt")
+        sensor1 = np.array(matriz, dtype=np.float32)
+        iniciarTeste(3)
+    elif opcao == 4:
+        print("Encerrando...")
+    else:
+        print('Opção inválida. Tente de novo')
+    sleep(2)

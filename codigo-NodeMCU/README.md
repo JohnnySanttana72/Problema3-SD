@@ -1,6 +1,6 @@
-# Automação residencial
+# Monitoramento contínuo (Código a ser embarcado no NodeMCU ESP8266)
 
-Esse projeto se trata de um protótipo de sistema que será embarcado no dispositivo microcontrolador para controle de acionamento de uma lâmpada.
+Protótipo de um Sistema de monitoramento de acidententes que comtém Interfaces de interação Web e por meio de Voz utilizando a AVS(Alexa Voice Service). 
 
 ## Começando
 
@@ -11,28 +11,17 @@ Para executar esse projeto em sua máquina basta clonar esse repositório usando
 
 Alguns requitos são importantes para executar esse projeto em sua máquina:
 
-#### Dispositivo
-
-* Ter a placa microcontrolador NodeMCU ESP8266
-
-#### Instalar Arduino IDE
-
-* [Arduino IDE](https://www.arduino.cc/en/software) - IDE para compilar códigos que são embarcados em qualquer tipo de placa.
-
-#### Configuração da IDE
-
-[Configurar IDE ](https://create.arduino.cc/projecthub/electropeak/getting-started-w-nodemcu-esp8266-on-arduino-ide-28184f) - Configuração da IDE para habilitar a programação para o NodeMCU.
 
 #### Bibliotecas
 
-As bibliotecas usadas estão em [libraries](https://github.com/JohnnySanttana72/automacao-resencial/tree/main/codigo-MCU/libraries).
+As bibliotecas usadas estão em [libraries](https://github.com/JohnnySanttana72/Problema3-SD/tree/main/codigo-NodeMCU/libraries).
 
 #### Conta AWS
 
 * É necessário ter uma conta AWS para se ter acesso ao serviço AWS Iot core para a criação de uma "Coisa" na plataforma e ser possível utilizar o protocolo MQTT e também gerar os certificados que permitem a comunicação usando autenticação TLS.
 
 #### Configurar credências da rede Wifi
-* Renomear o arquivo [wifi_credential_example.txt](https://github.com/JohnnySanttana72/automacao-resencial/blob/main/codigo-MCU/wifi/data) para **wifi_credential.txt**;
+* Renomear o arquivo [wifi_credential_example.txt](https://github.com/JohnnySanttana72/Problema3-SD/blob/main/codigo-NodeMCU/wifi/data) para **wifi_credential.txt**;
 * Inserir as credenciais no arquivo:
 	```
 	rede_wifi
@@ -41,7 +30,7 @@ As bibliotecas usadas estão em [libraries](https://github.com/JohnnySanttana72/
 
 #### Codificar Certificados
 
-* Para executar o protótipo é preciso codificar os certificados gerados na Aws no arquivo [certificates_example.h](https://github.com/JohnnySanttana72/automacao-resencial/tree/main/codigo-MCU/wifi) que deverá ser renomeado **certificates.h**.
+* Para executar o protótipo é preciso codificar os certificados gerados na Aws no arquivo [certificates_example.h](https://github.com/JohnnySanttana72/Problema3-SD/tree/main/codigo-NodeMCU/wifi) que deverá ser renomeado **certificates.h**.
 
 * Formato do **certificates.h**
 
